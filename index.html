@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Standort</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-400 to-purple-600 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm w-full mx-auto">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Dein aktueller Standort</h1>
+        <div id="location-info" class="text-gray-700 text-lg mb-4">
+            <p class="mb-2">Lade Standortdaten...</p>
+            <p class="text-sm text-gray-500">Bitte erlaube den Standortzugriff.</p>
+        </div>
+
+        <div class="bg-gray-100 p-4 rounded-lg mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Station 1 (Testpunkt)</h2>
+            <p>Koordinaten: <span class="font-bold">Angepasst an deinen aktuellen Standort für Testzwecke</span></p>
+            <p class="text-sm text-gray-600">Radius: 100 Meter</p>
+        </div>
+
+        <div id="distance-info" class="text-gray-700 text-lg mb-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Entfernung zur Station 1</h2>
+            <p id="calculated-distance" class="font-bold"></p>
+        </div>
+
+        <div id="radius-message" class="mt-4 p-3 bg-green-100 text-green-700 rounded-lg font-semibold hidden">
+            Du befindest dich im Radius von Station 1!
+        </div>
+
+        <button id="getLocationBtn" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+            Standort neu laden
+        </button>
+        <div id="error-message" class="mt-4 text-red-600 font-semibold hidden"></div>
+    </div>
+
+    <script>
+        const locationInfo = document.getElementById('location-info');
+        const errorMessage = document.getElementById('error-message');
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const distanceInfo = document.getElementById('distance-info');
+        const calculatedDistance = document.getElementById('calculated-distance');
+        const radiusMessage = document.getElementById('radius-message');
+
+        // Fixed point coordinates for Station 1 (50°00'50.6"N 9°11'58.2"E)
+        // This will be dynamically set to the user's current location for testing purposes
+        let station1 = {
+            latitude: 0, // Placeholder, will be updated to user's location
+            longitude: 0  // Placeholder, will be updated to user's location
+        };
+
+        const radiusKm = 0.1; // Radius in kilometers (e.g., 0.1 km = 100 meters)
+
+        // Function to convert degrees to radians
+        function toRadians(degrees) {
+            return degrees * Math.PI / 180;
+        }
+
+        // Function to calculate distance between two coordinates using Haversine formula
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of Earth in kilometers
+
+            const dLat = toRadians(lat2 - lat1);
+            const dLon = toRadians(lon2 - lon1);
+
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            const distance = R * c; // Distance in kilometers
+            return distance;
+        }
+
+        // Function to get the user's location
+        function getLocation() {
+            // Display loading message and hide any previous error messages
+            locationInfo.innerHTML = '<p class="mb-2">Lade Standortdaten...</p><p class="text-sm text-gray-500">Bitte erlaube den Standortzugriff.</p>';
+            errorMessage.classList.add('hidden');
+            distanceInfo.classList.add('hidden'); // Hide distance info until calculated
+            radiusMessage.classList.add('hidden'); // Hide radius message
+
+            if (navigator.geolocation) {
+                // Get current position with options for better accuracy and timeout
+                navigator.geolocation.getCurrentPosition(showPosition, showError, {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // 10 seconds timeout
+                    maximumAge: 0 // Do not use a cached position
+                });
+            } else {
+                // Geolocation is not supported by the browser
+                errorMessage.textContent = "Geolocation wird von diesem Browser nicht unterstützt.";
+                errorMessage.classList.remove('hidden');
+                locationInfo.innerHTML = '<p class="mb-2">Standort nicht verfügbar</p>';
+            }
+        }
+
+        // Function to display the position and calculate distance
+        function showPosition(position) {
+            const userLatitude = position.coords.latitude;
+            const userLongitude = position.coords.longitude;
+
+            // Set Station 1 coordinates to user's current location for testing
+            station1.latitude = userLatitude;
+            station1.longitude = userLongitude;
+
+            locationInfo.innerHTML = `
+                <p class="mb-2">Breitengrad: <span class="font-bold">${userLatitude.toFixed(6)}</span></p>
+                <p>Längengrad: <span class="font-bold">${userLongitude.toFixed(6)}</span></p>
+            `;
+            errorMessage.classList.add('hidden'); // Hide error message if location is successful
+
+            // Calculate distance to Station 1 (which is now your current location)
+            const distance = calculateDistance(userLatitude, userLongitude, station1.latitude, station1.longitude);
+
+            if (distance <= radiusKm) {
+                // User is within the radius
+                radiusMessage.classList.remove('hidden');
+                distanceInfo.classList.add('hidden'); // Hide distance info
+            } else {
+                // User is outside the radius, show distance
+                calculatedDistance.textContent = `${distance.toFixed(2)} km`;
+                distanceInfo.classList.remove('hidden'); // Show distance info
+                radiusMessage.classList.add('hidden'); // Hide radius message
+            }
+        }
+
+        // Function to show errors
+        function showError(error) {
+            let message = "";
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    message = "Der Benutzer hat die Anfrage für Geolocation abgelehnt.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = "Standortinformationen sind nicht verfügbar.";
+                    break;
+                case error.TIMEOUT:
+                    message = "Die Anfrage zum Abrufen des Benutzerstandorts ist abgelaufen.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    message = "Ein unbekannter Fehler ist aufgetreten.";
+                    break;
+            }
+            errorMessage.textContent = `Fehler: ${message}`;
+            errorMessage.classList.remove('hidden');
+            locationInfo.innerHTML = '<p class="mb-2">Standort konnte nicht abgerufen werden.</p>';
+            distanceInfo.classList.add('hidden'); // Hide distance info if location fails
+            radiusMessage.classList.add('hidden'); // Hide radius message if location fails
+        }
+
+        // Add event listener to the button to reload location
+        getLocationBtn.addEventListener('click', getLocation);
+
+        // Get location when the page loads
+        document.addEventListener('DOMContentLoaded', getLocation);
+    </script>
+</body>
+</html>
