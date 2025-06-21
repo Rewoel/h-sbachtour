@@ -13,36 +13,63 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-r from-blue-400 to-purple-600 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm w-full mx-auto">
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Dein aktueller Standort</h1>
-        <div id="location-info" class="text-gray-700 text-lg mb-4">
-            <p class="mb-2">Bitte klicke auf "Standort neu laden", um deine Koordinaten abzurufen.</p>
-            <p class="text-sm text-gray-500">Bitte erlaube den Standortzugriff. Audio wird nach der ersten Interaktion abgespielt.</p>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-lg shadow-md text-center max-w-sm w-full mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Hösbach Quiztour</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Dein aktueller Standort</h1>
+        <div id="location-info" class="text-gray-700 text-base mb-3">
+            <p class="mb-1">Bitte klicke auf "Standort neu laden", um deine Koordinaten abzurufen.</p>
+            <p class="text-xs text-gray-500">Bitte erlaube den Standortzugriff. Audio wird nach der ersten Interaktion abgespielt.</p>
         </div>
 
-        <div class="bg-gray-100 p-4 rounded-lg mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2">Station 1 (Testpunkt)</h2>
-            <p>Koordinaten: <span class="font-bold">Angepasst an deinen aktuellen Standort für Testzwecke</span></p>
-            <p class="text-sm text-gray-600">Radius: 100 Meter</p>
+        <div class="bg-gray-50 p-3 rounded-md mb-4">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Definierte Stationen (Radius: 20 Meter)</h2>
+            <div class="text-sm text-gray-700 space-y-0.5" id="station-list">
+                <!-- Station list will be dynamically populated -->
+            </div>
         </div>
 
-        <div id="distance-info" class="text-gray-700 text-lg mb-6 hidden">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2">Entfernung zur Station 1</h2>
+        <div id="distance-info" class="text-gray-700 text-base mb-4 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Entfernung zu <span id="current-target-station-name"></span></h2>
             <p id="calculated-distance" class="font-bold"></p>
         </div>
 
-        <div id="radius-message" class="mt-4 p-3 bg-green-100 text-green-700 rounded-lg font-semibold hidden">
-            Du befindest dich im Radius von Station 1!
+        <div id="radius-message" class="mt-3 p-2 bg-green-100 text-green-700 rounded-md font-semibold hidden">
+            <!-- Message for when inside the radius, updated dynamically -->
         </div>
 
-        <!-- Audio element for notification -->
-        <audio id="notificationSound" src="st1.mp3" preload="auto"></audio>
+        <div id="question-box" class="mt-3 p-3 bg-blue-50 rounded-md shadow-sm hidden text-left">
+            <p class="text-gray-800 font-semibold mb-2" id="question-text"></p>
+            <div class="space-y-1" id="question-options">
+                <!-- Options will be dynamically populated -->
+            </div>
+            <button id="submitAnswerBtn" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-3 rounded-md transition duration-300 ease-in-out text-sm">
+                Antwort senden
+            </button>
+            <div id="answer-feedback" class="mt-2 font-semibold hidden"></div>
+        </div>
 
-        <button id="getLocationBtn" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+        <div id="game-complete-message" class="mt-3 p-3 bg-yellow-100 text-yellow-800 rounded-md font-semibold text-center hidden">
+            Herzlichen Glückwunsch! Du hast alle Stationen abgeschlossen!
+        </div>
+
+        <!-- Google Maps iframe -->
+        <div class="mt-4 w-full rounded-md overflow-hidden shadow-sm">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m40!1m12!1m3!1d17452.181970883463!2d9.19030677239033!3d50.01607399419688!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m25!3e2!4m3!3m2!1d50.0141214!2d9.199492!4m3!3m2!1d50.0170266!2d9.196179299999999!4m3!3m2!1d50.0208389!2d9.196728!4m3!3m2!1d50.0182873!2d9.2021059!4m3!3m2!1d50.014244999999995!2d9.2039034!4m3!3m2!1d50.011536299999996!2d9.204961599999999!5e1!3m2!1sde!2sde!4v1750505526811!5m2!1sde!2sde"
+                width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+        <!-- Audio element for notification with fallback source and error handling -->
+        <audio id="notificationSound" preload="auto">
+            <source src="st1.mp3" type="audio/mpeg">
+            Ihr Browser unterstützt das Audio-Element nicht.
+        </audio>
+
+        <button id="getLocationBtn" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition duration-300 ease-in-out">
             Standort neu laden
         </button>
-        <div id="error-message" class="mt-4 text-red-600 font-semibold hidden"></div>
+        <div id="error-message" class="mt-3 text-red-600 font-semibold hidden"></div>
     </div>
 
     <script>
@@ -52,16 +79,97 @@
         const distanceInfo = document.getElementById('distance-info');
         const calculatedDistance = document.getElementById('calculated-distance');
         const radiusMessage = document.getElementById('radius-message');
+        const questionBox = document.getElementById('question-box');
+        const questionText = document.getElementById('question-text');
+        const questionOptions = document.getElementById('question-options');
+        const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+        const answerFeedback = document.getElementById('answer-feedback');
         const notificationSound = document.getElementById('notificationSound');
+        const gameCompleteMessage = document.getElementById('game-complete-message');
+        const currentTargetStationName = document.getElementById('current-target-station-name');
+        const stationList = document.getElementById('station-list');
 
-        // Fixed point coordinates for Station 1.
-        // These will be dynamically set to the user's current location for testing purposes.
-        let station1 = {
-            latitude: 0, // Placeholder, will be updated to user's location
-            longitude: 0  // Placeholder, will be updated to user's location
+
+        // Define all stations with their coordinates, questions, options, and correct answers
+        const stations = [
+            {
+                name: "Station 1",
+                latitude: 50.014056, // Reverted to original fixed latitude
+                longitude: 9.199500,  // Reverted to original fixed longitude
+                radiusKm: 0.02, // 20 meters
+                question: "Was schätzt du, wie hoch wir über dem Meeresspiegel sind?",
+                options: { a: "150m", b: "170m", c: "190m" },
+                correctAnswer: "170m"
+            },
+            {
+                name: "Station 2",
+                latitude: 50.0170277664181,
+                longitude: 9.19543145039203,
+                radiusKm: 0.02,
+                question: "Wo geht es jetzt entlang?",
+                options: { a: "links", b: "geradeaus", c: "rechts" },
+                correctAnswer: "rechts"
+            },
+            {
+                name: "Station 3",
+                latitude: 50.02088820647,
+                longitude: 9.196740368367642,
+                radiusKm: 0.02,
+                question: "Welche Farbe hat das Logo am Pfosten?",
+                options: { a: "grün", b: "blau", c: "rot" },
+                correctAnswer: "grün"
+            },
+            {
+                name: "Station 4",
+                latitude: 50.01819971850925,
+                longitude: 9.202812889467621,
+                radiusKm: 0.02,
+                question: "Was wird nicht angenommen?",
+                options: { a: "Asche", b: "Holz", c: "Metalle" },
+                correctAnswer: "Asche"
+            },
+            {
+                name: "Station 5",
+                latitude: 50.014187387465405,
+                longitude: 9.204679706908252,
+                radiusKm: 0.02,
+                question: "Wohin zeigt der untere Pfeil?",
+                options: { a: "vorne", b: "links", c: "rechts" },
+                correctAnswer: "rechts"
+            },
+            {
+                name: "Station 6",
+                latitude: 50.01164219273558,
+                longitude: 9.2048937578422,
+                radiusKm: 0.02,
+                question: "Hat der Weg Spaß gemacht?",
+                options: { a: "Ja!", b: "Vielleicht", c: "Nein!" },
+                correctAnswer: "Ja!"
+            }
+        ];
+
+        let currentObjectiveStationIndex = 0;
+        let isPlayingRadiusSound = false;
+
+        // Function to populate the station list dynamically
+        function populateStationList() {
+            let html = '';
+            stations.forEach(station => {
+                // Display original coordinates for Station 1
+                const latDisplay = (station.name === "Station 1" && station.latitude === 0) ? "aktueller Standort (Test)" : station.latitude.toFixed(6) + "°";
+                const lonDisplay = (station.name === "Station 1" && station.longitude === 0) ? "" : ", " + station.longitude.toFixed(6) + "°";
+                html += `<p><span class="font-bold">${station.name}:</span> ${latDisplay}${lonDisplay}</p>`;
+            });
+            stationList.innerHTML = html;
+        }
+
+
+        // Add an event listener to catch errors when loading the audio
+        notificationSound.onerror = function() {
+            console.error("Fehler beim Laden oder Abspielen der Audiodatei. Stellen Sie sicher, dass 'st1.mp3' korrekt vorhanden und gültig ist.");
+            errorMessage.textContent = "Fehler: Die Audiodatei konnte nicht geladen werden. Bitte überprüfen Sie 'st1.mp3'.";
+            errorMessage.classList.remove('hidden');
         };
-
-        const radiusKm = 0.1; // Radius in kilometers (e.g., 0.1 km = 100 meters)
 
         // Function to convert degrees to radians
         function toRadians(degrees) {
@@ -88,12 +196,23 @@
         // Function to get the user's location
         function getLocation() {
             // Display loading message and hide any previous error messages
-            locationInfo.innerHTML = '<p class="mb-2">Lade Standortdaten...</p><p class="text-sm text-gray-500">Bitte erlaube den Standortzugriff.</p>';
+            locationInfo.innerHTML = '<p class="mb-1">Lade Standortdaten...</p><p class="text-xs text-gray-500">Bitte erlaube den Standortzugriff.</p>';
             errorMessage.classList.add('hidden');
             distanceInfo.classList.add('hidden'); // Hide distance info until calculated
             radiusMessage.classList.add('hidden'); // Hide radius message
+            questionBox.classList.add('hidden'); // Hide question box
+            answerFeedback.classList.add('hidden'); // Hide feedback
+            gameCompleteMessage.classList.add('hidden'); // Hide game complete message
             notificationSound.pause(); // Pause any currently playing sound
             notificationSound.currentTime = 0; // Reset sound to beginning
+
+            if (currentObjectiveStationIndex >= stations.length) {
+                // All stations completed
+                gameCompleteMessage.classList.remove('hidden');
+                locationInfo.innerHTML = '<p class="mb-2">Spiel beendet!</p>';
+                getLocationBtn.disabled = true; // Disable the button
+                return; // Stop further processing
+            }
 
             if (navigator.geolocation) {
                 // Get current position with options for better accuracy and timeout
@@ -115,39 +234,71 @@
             const userLatitude = position.coords.latitude;
             const userLongitude = position.coords.longitude;
 
-            // Set Station 1 coordinates to user's current location for testing
-            station1.latitude = userLatitude;
-            station1.longitude = userLongitude;
+            // Station 1 is now fixed, no dynamic update here.
 
             locationInfo.innerHTML = `
-                <p class="mb-2">Breitengrad: <span class="font-bold">${userLatitude.toFixed(6)}</span></p>
+                <p class="mb-1">Breitengrad: <span class="font-bold">${userLatitude.toFixed(6)}</span></p>
                 <p>Längengrad: <span class="font-bold">${userLongitude.toFixed(6)}</span></p>
             `;
             errorMessage.classList.add('hidden'); // Hide error message if location is successful
 
-            // Calculate distance to Station 1 (which is now your current location)
-            const distance = calculateDistance(userLatitude, userLongitude, station1.latitude, station1.longitude);
+            const currentObjectiveStation = stations[currentObjectiveStationIndex];
+            const distance = calculateDistance(userLatitude, userLongitude, currentObjectiveStation.latitude, currentObjectiveStation.longitude);
 
-            if (distance <= radiusKm) {
-                // User is within the radius
+            if (distance <= currentObjectiveStation.radiusKm) {
+                // User is within the radius of the current objective station
+                radiusMessage.textContent = `Du befindest dich im Radius von ${currentObjectiveStation.name}!`;
                 radiusMessage.classList.remove('hidden');
                 distanceInfo.classList.add('hidden'); // Hide distance info
-                // Play the notification sound. This should now work as it's triggered by user interaction (button click).
-                try {
-                    notificationSound.play();
-                } catch (error) {
-                    console.error("Fehler beim Abspielen des Sounds (Autoplay-Richtlinien):", error);
-                    // Add a user-friendly message if sound can't be played automatically
-                    errorMessage.textContent = "Hinweis: Ton konnte nicht automatisch abgespielt werden. Bitte stelle sicher, dass Medien für diese Seite erlaubt sind.";
-                    errorMessage.classList.remove('hidden');
+                questionBox.classList.remove('hidden'); // Show question box
+                answerFeedback.classList.add('hidden'); // Hide previous feedback
+
+                // Populate question box
+                questionText.textContent = currentObjectiveStation.question;
+                questionOptions.innerHTML = ''; // Clear previous options
+                for (const key in currentObjectiveStation.options) {
+                    const optionValue = currentObjectiveStation.options[key];
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <input type="radio" id="option${key.toUpperCase()}" name="altitude_guess" value="${optionValue}" class="mr-2">
+                        <label for="option${key.toUpperCase()}">${key}) ${optionValue}</label>
+                    `;
+                    questionOptions.appendChild(div);
+                }
+
+                // Play the notification sound only if it's not already playing within this radius
+                if (!isPlayingRadiusSound) {
+                    try {
+                        notificationSound.load(); // Explicitly load the audio to reset state and prevent AbortError
+                        notificationSound.play()
+                            .then(() => {
+                                isPlayingRadiusSound = true;
+                            })
+                            .catch(error => {
+                                console.error("Fehler beim Abspielen des Sounds (Autoplay-Richtlinien oder anderer Fehler):", error);
+                                errorMessage.textContent = "Hinweis: Ton konnte nicht automatisch abgespielt werden. Bitte stelle sicher, dass Medien für diese Seite erlaubt sind.";
+                                errorMessage.classList.remove('hidden');
+                            });
+                    } catch (error) {
+                        console.error("Fehler beim Initiieren der Soundwiedergabe:", error);
+                    }
                 }
             } else {
-                // User is outside the radius, show distance
+                // User is outside the radius of the current objective station
+                radiusMessage.classList.add('hidden');
+                questionBox.classList.add('hidden');
+                answerFeedback.classList.add('hidden'); // Hide feedback when outside radius
+
+                currentTargetStationName.textContent = currentObjectiveStation.name;
                 calculatedDistance.textContent = `${distance.toFixed(2)} km`;
-                distanceInfo.classList.remove('hidden'); // Show distance info
-                radiusMessage.classList.add('hidden'); // Hide radius message
-                notificationSound.pause(); // Stop sound if user moves out of radius
-                notificationSound.currentTime = 0; // Reset sound to beginning
+                distanceInfo.classList.remove('hidden');
+
+                // If sound was playing for a radius, stop and reset it
+                if (isPlayingRadiusSound) {
+                    notificationSound.pause();
+                    notificationSound.currentTime = 0;
+                    isPlayingRadiusSound = false;
+                }
             }
         }
 
@@ -173,15 +324,52 @@
             locationInfo.innerHTML = '<p class="mb-2">Standort konnte nicht abgerufen werden.</p>';
             distanceInfo.classList.add('hidden'); // Hide distance info if location fails
             radiusMessage.classList.add('hidden'); // Hide radius message if location fails
+            questionBox.classList.add('hidden'); // Hide question box on error
+            answerFeedback.classList.add('hidden'); // Hide feedback on error
             notificationSound.pause(); // Ensure sound is stopped on error
             notificationSound.currentTime = 0;
+            isPlayingRadiusSound = false; // Reset flag on error
         }
+
+        // Event listener for answer submission
+        submitAnswerBtn.addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="altitude_guess"]:checked');
+            if (selectedOption) {
+                const currentStation = stations[currentObjectiveStationIndex];
+                if (selectedOption.value === currentStation.correctAnswer) {
+                    answerFeedback.textContent = "Richtig! Gut gemacht.";
+                    answerFeedback.className = "mt-3 font-semibold text-green-700";
+                    answerFeedback.classList.remove('hidden');
+
+                    // Advance to the next station
+                    currentObjectiveStationIndex++;
+                    isPlayingRadiusSound = false; // Reset sound flag for next station
+
+                    // Give a brief moment for the user to see the feedback, then update UI
+                    setTimeout(() => {
+                        getLocation(); // Re-evaluate location and update UI for next station
+                    }, 1500); // Wait 1.5 seconds
+
+                } else {
+                    answerFeedback.textContent = `Falsch. Die richtige Antwort ist: ${currentStation.correctAnswer}.`;
+                    answerFeedback.className = "mt-3 font-semibold text-red-600";
+                    answerFeedback.classList.remove('hidden');
+                }
+            } else {
+                answerFeedback.textContent = "Bitte wähle eine Antwort aus.";
+                answerFeedback.className = "mt-3 font-semibold text-yellow-600";
+                answerFeedback.classList.remove('hidden');
+            }
+        });
 
         // Add event listener to the button to reload location
         getLocationBtn.addEventListener('click', getLocation);
 
-        // Initial message to guide the user
-        // Removed DOMContentLoaded call to ensure user interaction for audio playback
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            populateStationList(); // Display the static list of stations
+            getLocation(); // Start the location process
+        });
     </script>
 </body>
 </html>
