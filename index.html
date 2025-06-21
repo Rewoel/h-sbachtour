@@ -36,6 +36,9 @@
             Du befindest dich im Radius von Station 1!
         </div>
 
+        <!-- Audio element for notification -->
+        <audio id="notificationSound" src="st1.mp3" preload="auto"></audio>
+
         <button id="getLocationBtn" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
             Standort neu laden
         </button>
@@ -49,6 +52,7 @@
         const distanceInfo = document.getElementById('distance-info');
         const calculatedDistance = document.getElementById('calculated-distance');
         const radiusMessage = document.getElementById('radius-message');
+        const notificationSound = document.getElementById('notificationSound');
 
         // Fixed point coordinates for Station 1 (50°00'50.6"N 9°11'58.2"E)
         // This will be dynamically set to the user's current location for testing purposes
@@ -126,11 +130,21 @@
                 // User is within the radius
                 radiusMessage.classList.remove('hidden');
                 distanceInfo.classList.add('hidden'); // Hide distance info
+                // Play the notification sound
+                try {
+                    notificationSound.play();
+                } catch (error) {
+                    console.error("Fehler beim Abspielen des Sounds:", error);
+                    // This error often occurs due to browser autoplay policies.
+                    // You might need a user interaction (like a click) to play audio.
+                }
             } else {
                 // User is outside the radius, show distance
                 calculatedDistance.textContent = `${distance.toFixed(2)} km`;
                 distanceInfo.classList.remove('hidden'); // Show distance info
                 radiusMessage.classList.add('hidden'); // Hide radius message
+                notificationSound.pause(); // Stop sound if user moves out of radius
+                notificationSound.currentTime = 0; // Reset sound to beginning
             }
         }
 
