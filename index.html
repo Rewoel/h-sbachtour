@@ -17,8 +17,8 @@
     <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm w-full mx-auto">
         <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Dein aktueller Standort</h1>
         <div id="location-info" class="text-gray-700 text-lg mb-4">
-            <p class="mb-2">Lade Standortdaten...</p>
-            <p class="text-sm text-gray-500">Bitte erlaube den Standortzugriff.</p>
+            <p class="mb-2">Bitte klicke auf "Standort neu laden", um deine Koordinaten abzurufen.</p>
+            <p class="text-sm text-gray-500">Bitte erlaube den Standortzugriff. Audio wird nach der ersten Interaktion abgespielt.</p>
         </div>
 
         <div class="bg-gray-100 p-4 rounded-lg mb-6">
@@ -54,8 +54,8 @@
         const radiusMessage = document.getElementById('radius-message');
         const notificationSound = document.getElementById('notificationSound');
 
-        // Fixed point coordinates for Station 1 (50°00'50.6"N 9°11'58.2"E)
-        // This will be dynamically set to the user's current location for testing purposes
+        // Fixed point coordinates for Station 1.
+        // These will be dynamically set to the user's current location for testing purposes.
         let station1 = {
             latitude: 0, // Placeholder, will be updated to user's location
             longitude: 0  // Placeholder, will be updated to user's location
@@ -92,6 +92,8 @@
             errorMessage.classList.add('hidden');
             distanceInfo.classList.add('hidden'); // Hide distance info until calculated
             radiusMessage.classList.add('hidden'); // Hide radius message
+            notificationSound.pause(); // Pause any currently playing sound
+            notificationSound.currentTime = 0; // Reset sound to beginning
 
             if (navigator.geolocation) {
                 // Get current position with options for better accuracy and timeout
@@ -130,13 +132,14 @@
                 // User is within the radius
                 radiusMessage.classList.remove('hidden');
                 distanceInfo.classList.add('hidden'); // Hide distance info
-                // Play the notification sound
+                // Play the notification sound. This should now work as it's triggered by user interaction (button click).
                 try {
                     notificationSound.play();
                 } catch (error) {
-                    console.error("Fehler beim Abspielen des Sounds:", error);
-                    // This error often occurs due to browser autoplay policies.
-                    // You might need a user interaction (like a click) to play audio.
+                    console.error("Fehler beim Abspielen des Sounds (Autoplay-Richtlinien):", error);
+                    // Add a user-friendly message if sound can't be played automatically
+                    errorMessage.textContent = "Hinweis: Ton konnte nicht automatisch abgespielt werden. Bitte stelle sicher, dass Medien für diese Seite erlaubt sind.";
+                    errorMessage.classList.remove('hidden');
                 }
             } else {
                 // User is outside the radius, show distance
@@ -170,13 +173,15 @@
             locationInfo.innerHTML = '<p class="mb-2">Standort konnte nicht abgerufen werden.</p>';
             distanceInfo.classList.add('hidden'); // Hide distance info if location fails
             radiusMessage.classList.add('hidden'); // Hide radius message if location fails
+            notificationSound.pause(); // Ensure sound is stopped on error
+            notificationSound.currentTime = 0;
         }
 
         // Add event listener to the button to reload location
         getLocationBtn.addEventListener('click', getLocation);
 
-        // Get location when the page loads
-        document.addEventListener('DOMContentLoaded', getLocation);
+        // Initial message to guide the user
+        // Removed DOMContentLoaded call to ensure user interaction for audio playback
     </script>
 </body>
 </html>
